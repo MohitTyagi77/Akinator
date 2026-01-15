@@ -14,6 +14,7 @@ class AkinatorEngine:
         self.asked = set()
         self.q_count = 0
         self.current = None
+        self.history = []
 
     def start(self):
         self.ask_next()
@@ -71,11 +72,38 @@ class AkinatorEngine:
         )
 
     def answer(self, yes):
+        # Save state before updating
+        self.history.append({
+            "candidates": self.candidates[:],
+            "asked": self.asked.copy(),
+            "q_count": self.q_count,
+            "current": self.current
+        })
+
         _, key = self.current
         self.candidates = [c for c in self.candidates if c.get(key) == yes]
         self.asked.add(key)
         self.q_count += 1
         self.ask_next()
+
+    def undo(self):
+        if not self.history:
+            return
+
+        state = self.history.pop()
+        self.candidates = state["candidates"]
+        self.asked = state["asked"]
+        self.q_count = state["q_count"]
+        self.current = state["current"]
+
+        # Restore UI
+        text, _ = self.current
+        confidence = self.compute_confidence()
+        self.update_ui(
+            f"🤔 {text}\n\nQuestion {self.q_count + 1}/{self.MAX_QUESTIONS}\nConfidence: {confidence}%",
+            False,
+            confidence
+        )
 
     def finish(self, force):
         confidence = self.compute_confidence()

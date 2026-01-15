@@ -97,6 +97,9 @@ class App:
             self.add_button("👍 Yes", lambda: self.engine.answer(True))
             self.add_button("👎 No", lambda: self.engine.answer(False))
 
+            if self.engine.history:
+                self.add_button("↩ Undo", self.engine.undo)
+
     def continue_guessing(self):
         self.engine.ask_next()
 
